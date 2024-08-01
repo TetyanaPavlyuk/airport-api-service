@@ -76,6 +76,10 @@ class Crew(models.Model):
     last_name = models.CharField(max_length=255)
     position = models.ForeignKey(CrewPosition, on_delete=models.CASCADE)
 
+    @property
+    def position_full_name(self) -> str:
+        return f"{self.position}: {self.first_name} {self.last_name}"
+
     def __str__(self):
         return f"{self.position}: {self.first_name} {self.last_name}"
 

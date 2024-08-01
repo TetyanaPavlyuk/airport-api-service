@@ -77,14 +77,15 @@ class Crew(models.Model):
     position = models.ForeignKey(CrewPosition, on_delete=models.CASCADE)
 
     @property
-    def position_full_name(self) -> str:
-        return f"{self.position}: {self.first_name} {self.last_name}"
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
 
     def __str__(self):
         return f"{self.position}: {self.first_name} {self.last_name}"
 
     class Meta:
         ordering = ["position", "first_name", "last_name"]
+        unique_together = ["position", "first_name", "last_name"]
 
 
 class Order(models.Model):

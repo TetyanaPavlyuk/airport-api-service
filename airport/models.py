@@ -97,7 +97,7 @@ class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.created_at
+        return self.created_at.strftime("%Y-%m-%d %H:%M:%S")
 
     class Meta:
         ordering = ["-created_at"]
@@ -111,8 +111,10 @@ class Flight(models.Model):
     crew = models.ManyToManyField(Crew)
 
     def __str__(self):
-        return (f"{self.route.source} ({self.departure_time}) - "
-                f"{self.route.destination} ({self.arrival_time})")
+        return (f"{self.route.source} "
+                f"({self.departure_time.strftime("%Y-%m-%d %H:%M:%S")}) - "
+                f"{self.route.destination} "
+                f"({self.arrival_time.strftime("%Y-%m-%d %H:%M:%S")})")
 
     class Meta:
         ordering = ["departure_time", "route", "airplane"]

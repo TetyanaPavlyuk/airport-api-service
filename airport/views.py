@@ -105,6 +105,11 @@ class CrewViewSet(
         return CrewSerializer
 
 
+class FlightPagination(PageNumberPagination):
+    page_size = 20
+    max_page_size = 100
+
+
 class FlightViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -123,6 +128,7 @@ class FlightViewSet(
         )
     )
     serializer_class = FlightSerializer
+    pagination_class = FlightPagination
     # permission_classes = []
 
     def get_serializer_class(self):

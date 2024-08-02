@@ -1,5 +1,4 @@
 from django.db.models import F, Count
-from django.shortcuts import render
 from rest_framework import mixins
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import GenericViewSet
@@ -18,6 +17,7 @@ from airport.models import (
 from airport.serializers import (
     AirportSerializer,
     RouteSerializer,
+    RouteListSerializer,
     AirplaneTypeSerializer,
     AirplaneSerializer,
     AirplaneListSerializer,
@@ -50,9 +50,14 @@ class RouteViewSet(
     mixins.ListModelMixin,
     GenericViewSet
 ):
-    queryset = Route.objects.all()
+    queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     # permission_classes =
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return RouteListSerializer
+        return RouteSerializer
 
 
 class AirplaneTypeViewSet(

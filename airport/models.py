@@ -7,6 +7,10 @@ class Airport(models.Model):
     name = models.CharField(max_length=255, unique=True)
     closest_big_city = models.CharField(max_length=255)
 
+    @property
+    def name_city(self) -> str:
+        return f"{self.name} ({self.closest_big_city})"
+
     def __str__(self):
         return f"{self.name} ({self.closest_big_city})"
 

@@ -140,13 +140,15 @@ class TicketSeatsSerializer(TicketSerializer):
 
 
 class FlightDetailSerializer(FlightListSerializer):
-    airplane = AirplaneSerializer(many=False, read_only=True)
-    crew_position_name = serializers.CharField(
-        source="crew.position_full_name", read_only=True
-    )
+    airplane = AirplaneListSerializer(many=False, read_only=True)
+    crew = serializers.SerializerMethodField()
     taken_places = TicketSeatsSerializer(
         source="tickets", many=True, read_only=True
     )
+
+    def get_crew(self, obj):
+        crew_members = obj.crew.select_related("position").all()
+        return [member.position_name for member in crew_members]
 
     class Meta:
         model = Flight
@@ -157,7 +159,7 @@ class FlightDetailSerializer(FlightListSerializer):
             "departure_time",
             "arrival_time",
             "airplane",
-            "crew_position_name",
+            "crew",
             "taken_places"
         ]
 

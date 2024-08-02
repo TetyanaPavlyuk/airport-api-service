@@ -118,7 +118,7 @@ class FlightViewSet(
 ):
     queryset = (
         Flight.objects
-        .select_related("route", "airplane")
+        .select_related("route__source", "route__destination", "airplane")
         .prefetch_related("crew")
         .annotate(
             tickets_available=(

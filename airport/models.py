@@ -8,7 +8,7 @@ class Airport(models.Model):
     closest_big_city = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.closest_big_city})"
 
     class Meta:
         ordering = ["name"]
@@ -79,6 +79,10 @@ class Crew(models.Model):
     @property
     def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
+
+    @property
+    def position_name(self) -> str:
+        return f"{self.position}: {self.full_name}"
 
     def __str__(self):
         return f"{self.position}: {self.first_name} {self.last_name}"

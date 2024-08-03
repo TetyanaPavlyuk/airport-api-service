@@ -12,7 +12,6 @@ from airport.models import (
     Crew,
     Order,
     Flight,
-    Ticket
 )
 from airport.serializers import (
     AirportSerializer,
@@ -26,12 +25,10 @@ from airport.serializers import (
     CrewListSerializer,
     FlightSerializer,
     FlightListSerializer,
-    TicketSerializer,
-    TicketListSerializer,
-    TicketSeatsSerializer,
     FlightDetailSerializer,
     OrderSerializer,
-    OrderListSerializer
+    OrderListSerializer,
+    OrderDetailSerializer
 )
 
 
@@ -123,8 +120,13 @@ class FlightViewSet(
 ):
     queryset = (
         Flight.objects
-        .select_related("route__source", "route__destination", "airplane")
-        .prefetch_related("crew")
+        .select_related(
+            "route__source",
+            "route__destination",
+            "airplane__airplane_type"
+        )
+        .prefetch_related("crew__position")
+        .all()
         .annotate(
             tickets_available=(
                 F("airplane__rows") * F("airplane__seats_in_row")
@@ -152,22 +154,30 @@ class OrderPagination(PageNumberPagination):
 class OrderViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     GenericViewSet
 ):
-    queryset = (Order.objects
-                .select_related("user")
-                .prefetch_related("tickets__flight__route",
-                                  "tickets__flight__airplane"))
+    queryset = Order.objects.all()
     serializer_class = OrderSerializer
     pagination_class = OrderPagination
     # permission_classes = []
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        queryset = self.queryset
+        if self.action in ["list", "retrieve"]:
+            queryset = (queryset.select_related()
+                        .prefetch_related("tickets__flight__route__source",
+                                          "tickets__flight__route__destination",
+                                          "tickets__flight__airplane")
+                        )
+        queryset = queryset.filter(user=self.request.user)
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
             return OrderListSerializer
+        if self.action == "retrieve":
+            return OrderDetailSerializer
         return OrderSerializer
 
     def perform_create(self, serializer):

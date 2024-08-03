@@ -31,6 +31,10 @@ class Route(models.Model):
     )
     distance = models.IntegerField()
 
+    @property
+    def source_dest(self) -> str:
+        return f"{self.source} - {self.destination}"
+
     def __str__(self):
         return f"{self.source.name} - {self.destination.name} ({self.distance} km)"
 
@@ -113,6 +117,11 @@ class Flight(models.Model):
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
     crew = models.ManyToManyField(Crew)
+
+    @property
+    def route_depart(self) -> str:
+        return (f"{self.route.source} - {self.route.destination} / "
+                f"{self.departure_time.strftime("%Y-%m-%d %H:%M:%S")}")
 
     def __str__(self):
         return (f"{self.route.source} "

@@ -49,13 +49,9 @@ class AirplaneSerializer(serializers.ModelSerializer):
 
 
 class AirplaneListSerializer(AirplaneSerializer):
-    airplane_type_name = serializers.CharField(
+    airplane_type = serializers.CharField(
         source="airplane_type.name", read_only=True
     )
-
-    class Meta:
-        model = Airplane
-        fields = ["id", "name", "rows", "seats_in_row", "airplane_type_name"]
 
 
 class CrewPositionSerializer(serializers.ModelSerializer):
@@ -77,7 +73,7 @@ class CrewListSerializer(CrewSerializer):
 
     class Meta:
         model = Crew
-        fields = ["id", "position", "full_name"]
+        fields = ["id", "position", "first_name", "last_name"]
 
 
 class FlightSerializer(serializers.ModelSerializer):
@@ -135,11 +131,17 @@ class TicketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ["id", "row", "seat", "flight", "order"]
+        fields = ["id", "row", "seat", "flight"]
 
 
 class TicketListSerializer(TicketSerializer):
     flight = FlightListSerializer(many=False, read_only=True)
+
+
+class TicketShortSerializer(TicketSerializer):
+    flight = serializers.CharField(
+        source="flight.route_depart", read_only=True
+    )
 
 
 class TicketSeatsSerializer(TicketSerializer):
@@ -190,4 +192,43 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class OrderListSerializer(OrderSerializer):
-    tickets = TicketListSerializer(many=True, read_only=True)
+    tickets = TicketShortSerializer(many=True, read_only=True)
+
+
+class FlightForOrderSerializer(FlightSerializer):
+    tickets = TicketSeatsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Flight
+        fields = [
+            "id",
+            "route",
+            "airplane",
+            "departure_time",
+            "arrival_time",
+            "tickets"
+        ]
+
+
+class OrderDetailSerializer(OrderSerializer):
+    flights = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ["id", "created_at", "flights"]
+
+    def get_flights(self, obj):
+        flights = {}
+        for ticket in obj.tickets.all():
+            flight = ticket.flight
+            if flight.id not in flights.keys():
+                flights[flight.id] = {
+                    "id": flight.id,
+                    "route": flight.route.source_dest,
+                    "airplane": flight.airplane.name,
+                    "departure_time": flight.departure_time,
+                    "arrival_time": flight.arrival_time,
+                    "tickets": []
+                }
+            flights[flight.id]["tickets"].append(TicketSeatsSerializer(ticket).data)
+        return list(flights.values())

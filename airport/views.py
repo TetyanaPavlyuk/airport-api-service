@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.db.models import F, Count
 from rest_framework import mixins
 from rest_framework.pagination import PageNumberPagination
@@ -137,6 +139,61 @@ class FlightViewSet(
     serializer_class = FlightSerializer
     pagination_class = FlightPagination
     # permission_classes = []
+
+    @staticmethod
+    def _params_to_ints(qs):
+        """Converts a list of string IDs to a list of integers."""
+        return [int(str_id) for str_id in qs.split(",")]
+
+    def get_queryset(self):
+        """Retrieve the flights with filters"""
+        source_airport = self.request.query_params.get("source_airport")
+        destination_airport = self.request.query_params.get("destination_airport")
+        source_city = self.request.query_params.get("source_city")
+        destination_city = self.request.query_params.get("destination_city")
+        airplane = self.request.query_params.get("airplane")
+        crew = self.request.query_params.get("crew")
+        date_departure = self.request.query_params.get("date_departure")
+        date_arrival = self.request.query_params.get("date_arrival")
+
+        queryset = self.queryset
+
+        if source_airport:
+            queryset = queryset.filter(
+                route__source__name__icontains=source_airport
+            )
+        if destination_airport:
+            queryset = queryset.filter(
+                route__destination__name__icontains=destination_airport
+            )
+        if source_city:
+            queryset = queryset.filter(
+                route__source__closest_big_city__icontains=source_city
+            )
+        if destination_city:
+            queryset = queryset.filter(
+                route__destination__closest_big_city__icontains=destination_city
+            )
+        if airplane:
+            queryset = queryset.filter(airplane__name__icontains=airplane)
+        if crew:
+            crew_ids = self._params_to_ints(crew)
+            queryset = queryset.filter(crew__id__in=crew_ids)
+        if date_departure:
+            date_departure = datetime.strptime(
+                date_departure, "%Y-%m-%d"
+            ).date()
+            queryset = queryset.filter(
+                departure_time__gte=date_departure
+            )
+        if date_arrival:
+            date_arrival = datetime.strptime(
+                date_arrival, "%Y-%m-%d"
+            ).date() + timedelta(days=1)
+            queryset = queryset.filter(
+                arrival_time__lte=date_arrival
+            )
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":

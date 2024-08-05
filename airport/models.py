@@ -192,5 +192,5 @@ class Ticket(models.Model):
         return f"{self.flight} (seat: {self.seat}, row: {self.row})"
 
     class Meta:
-        ordering = ["-order", "flight"]
+        ordering = ["-order", "flight", "row", "seat"]
         unique_together = ["row", "seat", "flight"]

@@ -46,15 +46,29 @@ class Route(models.Model):
         ordering = ["source", "destination"]
 
 
-class AirplaneType(models.Model):
+class AirplaneManufacturer(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    manufacturer = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
 
+
+class AirplaneType(models.Model):
+    name = models.CharField(max_length=255)
+    manufacturer = models.ForeignKey(
+        AirplaneManufacturer,
+        on_delete=models.SET_NULL,
+        related_name="airplane_types",
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.name} ({self.manufacturer})"
+
     class Meta:
-        ordering = ["name"]
+        ordering = ["name", "manufacturer"]
+        unique_together = ["name", "manufacturer"]
 
 
 def airplane_image_path(instance: "Airplane", filename: str) -> str:

@@ -5,6 +5,7 @@ from rest_framework.exceptions import ValidationError
 from airport.models import (
     Airplane,
     AirplaneType,
+    AirplaneManufacturer,
     Airport,
     Route,
     CrewPosition,
@@ -36,10 +37,23 @@ class RouteListSerializer(RouteSerializer):
     )
 
 
+class AirplaneManufacturerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AirplaneManufacturer
+        fields = ["id", "name"]
+
+
 class AirplaneTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = AirplaneType
         fields = ["id", "name", "manufacturer"]
+
+
+class AirplaneTypeListSerializer(AirplaneTypeSerializer):
+    manufacturer = serializers.CharField(
+        source="manufacturer.name",
+        read_only=True
+    )
 
 
 class AirplaneImageSerializer(serializers.ModelSerializer):
@@ -54,18 +68,43 @@ class AirplaneSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "rows", "seats_in_row", "airplane_type"]
 
 
-class AirplaneListSerializer(AirplaneSerializer):
+class AirplaneListSerializer(serializers.ModelSerializer):
     airplane_type = serializers.CharField(
         source="airplane_type.name", read_only=True
     )
+    airplane_manufacturer = serializers.CharField(
+        source="airplane_type.manufacturer.name", read_only=True
+    )
+
+    class Meta:
+        model = Airplane
+        fields = [
+            "id",
+            "name",
+            "rows",
+            "seats_in_row",
+            "airplane_type",
+            "airplane_manufacturer"
+        ]
 
 
 class AirplaneDetailSerializer(AirplaneSerializer):
     airplane_type = AirplaneTypeSerializer(many=False, read_only=True)
+    airplane_manufacturer = serializers.CharField(
+        source="airplane_type__manufacturer.name", read_only=True
+    )
 
     class Meta:
         model = Airplane
-        fields = ["id", "name", "rows", "seats_in_row", "airplane_type", "image"]
+        fields = [
+            "id",
+            "name",
+            "rows",
+            "seats_in_row",
+            "airplane_type",
+            "airplane_manufacturer",
+            "image"
+        ]
 
 
 class CrewPositionSerializer(serializers.ModelSerializer):

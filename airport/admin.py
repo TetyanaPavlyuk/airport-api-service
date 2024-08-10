@@ -3,6 +3,7 @@ from django.contrib import admin
 from airport.models import (
     Airplane,
     AirplaneType,
+    AirplaneManufacturer,
     Airport,
     Route,
     CrewPosition,
@@ -25,6 +26,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 admin.site.register(Airplane)
 admin.site.register(AirplaneType)
+admin.site.register(AirplaneManufacturer)
 admin.site.register(Airport)
 admin.site.register(Route)
 admin.site.register(CrewPosition)

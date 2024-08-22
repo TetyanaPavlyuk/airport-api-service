@@ -12,7 +12,7 @@ from airport.models import (
     Crew,
     Order,
     Flight,
-    Ticket
+    Ticket,
 )
 
 
@@ -29,12 +29,8 @@ class RouteSerializer(serializers.ModelSerializer):
 
 
 class RouteListSerializer(RouteSerializer):
-    source = serializers.CharField(
-        source="source.name_city", read_only=True
-    )
-    destination = serializers.CharField(
-        source="destination.name_city", read_only=True
-    )
+    source = serializers.CharField(source="source.name_city", read_only=True)
+    destination = serializers.CharField(source="destination.name_city", read_only=True)
 
 
 class AirplaneManufacturerSerializer(serializers.ModelSerializer):
@@ -50,10 +46,7 @@ class AirplaneTypeSerializer(serializers.ModelSerializer):
 
 
 class AirplaneTypeListSerializer(AirplaneTypeSerializer):
-    manufacturer = serializers.CharField(
-        source="manufacturer.name",
-        read_only=True
-    )
+    manufacturer = serializers.CharField(source="manufacturer.name", read_only=True)
 
 
 class AirplaneImageSerializer(serializers.ModelSerializer):
@@ -69,9 +62,7 @@ class AirplaneSerializer(serializers.ModelSerializer):
 
 
 class AirplaneListSerializer(serializers.ModelSerializer):
-    airplane_type = serializers.CharField(
-        source="airplane_type.name", read_only=True
-    )
+    airplane_type = serializers.CharField(source="airplane_type.name", read_only=True)
     airplane_manufacturer = serializers.CharField(
         source="airplane_type.manufacturer.name", read_only=True
     )
@@ -84,7 +75,7 @@ class AirplaneListSerializer(serializers.ModelSerializer):
             "rows",
             "seats_in_row",
             "airplane_type",
-            "airplane_manufacturer"
+            "airplane_manufacturer",
         ]
 
 
@@ -103,7 +94,7 @@ class AirplaneDetailSerializer(AirplaneSerializer):
             "seats_in_row",
             "airplane_type",
             "airplane_manufacturer",
-            "image"
+            "image",
         ]
 
 
@@ -120,9 +111,7 @@ class CrewSerializer(serializers.ModelSerializer):
 
 
 class CrewListSerializer(CrewSerializer):
-    position = serializers.CharField(
-        source="position.name", read_only=True
-    )
+    position = serializers.CharField(source="position.name", read_only=True)
 
     class Meta:
         model = Crew
@@ -141,17 +130,18 @@ class FlightSerializer(serializers.ModelSerializer):
             "crew"
         ]
 
+    def validate(self, attrs):
+        data = super(FlightSerializer, self).validate(attrs=attrs)
+        if attrs["departure_time"] >= attrs["arrival_time"]:
+            raise ValidationError("Arrival time must be later than "
+                                  "departure time.")
+        return data
+
 
 class FlightListSerializer(FlightSerializer):
-    route_source = serializers.CharField(
-        source="route.source", read_only=True
-    )
-    route_dest = serializers.CharField(
-        source="route.destination", read_only=True
-    )
-    airplane_name = serializers.CharField(
-        source="airplane.name", read_only=True
-    )
+    route_source = serializers.CharField(source="route.source", read_only=True)
+    route_dest = serializers.CharField(source="route.destination", read_only=True)
+    airplane_name = serializers.CharField(source="airplane.name", read_only=True)
     airplane_capacity = serializers.CharField(
         source="airplane.capacity", read_only=True
     )
@@ -175,10 +165,7 @@ class TicketSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         data = super(TicketSerializer, self).validate(attrs=attrs)
         Ticket.validate_ticket(
-            attrs["row"],
-            attrs["seat"],
-            attrs["flight"].airplane,
-            ValidationError
+            attrs["row"], attrs["seat"], attrs["flight"].airplane, ValidationError
         )
         return data
 
@@ -194,15 +181,13 @@ class TicketListSerializer(TicketSerializer):
 class TicketSeatsSerializer(TicketSerializer):
     class Meta:
         model = Ticket
-        fields =["row", "seat"]
+        fields = ["row", "seat"]
 
 
 class FlightDetailSerializer(FlightListSerializer):
     airplane = AirplaneListSerializer(many=False, read_only=True)
     crew = serializers.SerializerMethodField()
-    taken_places = TicketSeatsSerializer(
-        source="tickets", many=True, read_only=True
-    )
+    taken_places = TicketSeatsSerializer(source="tickets", many=True, read_only=True)
 
     def get_crew(self, obj):
         crew_members = obj.crew.select_related("position").all()
@@ -218,7 +203,7 @@ class FlightDetailSerializer(FlightListSerializer):
             "arrival_time",
             "airplane",
             "crew",
-            "taken_places"
+            "taken_places",
         ]
 
 
@@ -253,7 +238,7 @@ class FlightForOrderSerializer(FlightSerializer):
             "airplane",
             "departure_time",
             "arrival_time",
-            "tickets"
+            "tickets",
         ]
 
 
@@ -275,7 +260,7 @@ class OrderDetailSerializer(OrderSerializer):
                     "airplane": flight.airplane.name,
                     "departure_time": flight.departure_time,
                     "arrival_time": flight.arrival_time,
-                    "tickets": []
+                    "tickets": [],
                 }
             flights[flight.id]["tickets"].append(TicketSeatsSerializer(ticket).data)
         return list(flights.values())

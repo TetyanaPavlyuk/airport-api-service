@@ -152,6 +152,10 @@ class Flight(models.Model):
     arrival_time = models.DateTimeField()
     crew = models.ManyToManyField(Crew)
 
+    @property
+    def tickets_available(self) -> int:
+        return self.airplane.capacity - self.tickets.count()
+
     def clean(self):
         if self.departure_time >= self.arrival_time:
             raise ValidationError("Arrival time must be later than "

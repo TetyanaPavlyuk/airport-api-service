@@ -193,14 +193,7 @@ class FlightViewSet(
         date_arrival = self.request.query_params.get("date_arrival")
 
         if self.action == "list":
-            queryset = (
-                self.queryset.annotate(
-                    tickets_available=(
-                            F("airplane__rows") * F("airplane__seats_in_row")
-                            - Count("tickets")
-                    )
-                )
-            )
+            queryset = self.queryset.prefetch_related("tickets")
         elif self.action == "retrieve":
             queryset = (
                 self.queryset

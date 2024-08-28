@@ -378,3 +378,48 @@ class AuthenticatedFlightAPITests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, serializer.data)
+
+    def test_create_flight_forbidden(self):
+        airport1 = Airport.objects.create(name="Airport1")
+        airport2 = Airport.objects.create(name="Airport2")
+        route = Route.objects.create(
+            source=airport1,
+            destination=airport2,
+            distance=600
+        )
+        airplane_manufacturer = AirplaneManufacturer.objects.create(
+            name="Manufacturer"
+        )
+        airplane_type = AirplaneType.objects.create(
+            name="Airplane Type",
+            manufacturer=airplane_manufacturer
+        )
+        airplane = Airplane.objects.create(
+            name="Airplane",
+            rows=20,
+            seats_in_row=8,
+            airplane_type=airplane_type
+        )
+        payload = {
+            "route": route,
+            "airplane": airplane,
+            "departure_time": "2024-08-27 15:00:00+03:00",
+            "arrival_time": "2024-08-27 17:00:00+03:00",
+        }
+
+        response = self.client.post(FLIGHT_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class AdminFlightAPITests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create(
+            email="admin@mail.com",
+            password="TestPassword12345",
+            is_staff=True
+        )
+        self.client.force_authenticate(user=self.user)
+
+

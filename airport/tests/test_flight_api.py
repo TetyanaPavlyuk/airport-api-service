@@ -18,8 +18,7 @@ from airport.models import (
     Ticket
 )
 
-from airport.serializers import FlightListSerializer
-
+from airport.serializers import FlightListSerializer, FlightDetailSerializer
 
 FLIGHT_URL = reverse("airport:flight-list")
 
@@ -370,3 +369,12 @@ class AuthenticatedFlightAPITests(TestCase):
         self.assertIn(serializer_eq.data, response.data["results"])
         self.assertIn(serializer_qt.data, response.data["results"])
         self.assertNotIn(serializer_lt.data, response.data["results"])
+
+    def test_retrieve_flight_detail(self):
+        flight = sample_flight()
+        url = detail_url(flight.id)
+        response = self.client.get(url)
+        serializer = FlightDetailSerializer(flight)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, serializer.data)

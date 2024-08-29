@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.utils.dateparse import parse_datetime
 from faker import Faker
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -448,9 +449,14 @@ class AdminFlightAPITests(TestCase):
         crew_position = CrewPosition.objects.create(
             name="Crew Position",
         )
-        crew = Crew.objects.create(
-            first_name="First Name",
-            last_name="Last Name",
+        crew1 = Crew.objects.create(
+            first_name="First Name1",
+            last_name="Last Name1",
+            position=crew_position,
+        )
+        crew2 = Crew.objects.create(
+            first_name="First Name2",
+            last_name="Last Name2",
             position=crew_position,
         )
 
@@ -459,9 +465,24 @@ class AdminFlightAPITests(TestCase):
             "airplane": airplane.id,
             "departure_time": "2024-08-27 15:00:00+03:00",
             "arrival_time": "2024-08-27 17:00:00+03:00",
-            "crew": [crew.id]
+            "crew": [crew1.id, crew2.id]
         }
 
         response = self.client.post(FLIGHT_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        flight = Flight.objects.get(id=response.data["id"])
+        for key in ["route", "airplane"]:
+            self.assertEqual(payload[key], getattr(flight, key).id)
+
+        for key in ["departure_time", "arrival_time"]:
+            self.assertEqual(
+                parse_datetime(payload[key]),
+                getattr(flight, key)
+            )
+
+        crews = flight.crew.all()
+        self.assertEqual(crews.count(), 2)
+        self.assertIn(crew1, crews)
+        self.assertIn(crew2, crews)

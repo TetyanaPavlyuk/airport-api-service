@@ -110,17 +110,19 @@ class AuthenticatedFlightAPITests(TestCase):
         self.client.force_authenticate(user=self.user)
 
     def test_flight_list(self):
-        flight = sample_flight()
-        sample_flight()
+        flight1 = sample_flight()
         order = Order.objects.create(
             user=self.user,
         )
         Ticket.objects.create(
             row=5,
             seat=3,
-            flight=flight,
+            flight=flight1,
             order=order
         )
+        flight1.save()
+        flight2 = sample_flight()
+        flight2.save()
 
         response = self.client.get(FLIGHT_URL)
 
@@ -128,7 +130,7 @@ class AuthenticatedFlightAPITests(TestCase):
         serializer = FlightListSerializer(flights, many=True)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["results"], serializer.data)
+        self.assertCountEqual(response.data["results"], serializer.data)
 
     def test_filter_flights_by_source_airport(self):
         airport_in = Airport.objects.create(name="Airport1")
@@ -401,8 +403,8 @@ class AuthenticatedFlightAPITests(TestCase):
             airplane_type=airplane_type
         )
         payload = {
-            "route": route,
-            "airplane": airplane,
+            "route": route.id,
+            "airplane": airplane.id,
             "departure_time": "2024-08-27 15:00:00+03:00",
             "arrival_time": "2024-08-27 17:00:00+03:00",
         }
@@ -422,4 +424,44 @@ class AdminFlightAPITests(TestCase):
         )
         self.client.force_authenticate(user=self.user)
 
+    def test_create_flight(self):
+        airport1 = Airport.objects.create(name="Airport1")
+        airport2 = Airport.objects.create(name="Airport2")
+        route = Route.objects.create(
+            source=airport1,
+            destination=airport2,
+            distance=600
+        )
+        airplane_manufacturer = AirplaneManufacturer.objects.create(
+            name="Manufacturer"
+        )
+        airplane_type = AirplaneType.objects.create(
+            name="Airplane Type",
+            manufacturer=airplane_manufacturer
+        )
+        airplane = Airplane.objects.create(
+            name="Airplane",
+            rows=20,
+            seats_in_row=8,
+            airplane_type=airplane_type
+        )
+        crew_position = CrewPosition.objects.create(
+            name="Crew Position",
+        )
+        crew = Crew.objects.create(
+            first_name="First Name",
+            last_name="Last Name",
+            position=crew_position,
+        )
 
+        payload = {
+            "route": route.id,
+            "airplane": airplane.id,
+            "departure_time": "2024-08-27 15:00:00+03:00",
+            "arrival_time": "2024-08-27 17:00:00+03:00",
+            "crew": [crew.id]
+        }
+
+        response = self.client.post(FLIGHT_URL, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)

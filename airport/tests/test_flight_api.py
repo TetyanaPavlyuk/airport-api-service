@@ -486,3 +486,24 @@ class AdminFlightAPITests(TestCase):
         self.assertEqual(crews.count(), 2)
         self.assertIn(crew1, crews)
         self.assertIn(crew2, crews)
+
+    def test_put_flight_not_allowed(self):
+        payload = {
+            "departure_time": "2024-08-27 10:00:00+03:00",
+            "arrival_time": "2024-08-27 13:00:00+03:00",
+        }
+
+        flight = sample_flight()
+        url = detail_url(flight.id)
+
+        response = self.client.put(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_delete_flight_not_allowed(self):
+        flight = sample_flight()
+        url = detail_url(flight.id)
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)

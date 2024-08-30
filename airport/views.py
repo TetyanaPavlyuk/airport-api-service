@@ -315,6 +315,7 @@ class OrderViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
     GenericViewSet
 ):
     queryset = Order.objects.all()

@@ -40,7 +40,8 @@ class Route(models.Model):
         return f"{self.source} - {self.destination}"
 
     def __str__(self):
-        return f"{self.source.name} - {self.destination.name} ({self.distance} km)"
+        return (f"{self.source.name} - {self.destination.name} "
+                f"({self.distance} km)")
 
     class Meta:
         ordering = ["source", "destination"]

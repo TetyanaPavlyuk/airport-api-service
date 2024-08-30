@@ -11,7 +11,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from airport.models import AirplaneType, Airplane, AirplaneManufacturer
-from airport.serializers import AirplaneListSerializer, AirplaneDetailSerializer
+from airport.serializers import (
+    AirplaneListSerializer,
+    AirplaneDetailSerializer
+)
 
 AIRPLANE_URL = reverse("airport:airplane-list")
 
@@ -98,6 +101,7 @@ class AuthenticatedAirplaneApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
+
 class AdminAirplaneApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -107,7 +111,7 @@ class AdminAirplaneApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_airplane(self):
-        airplane_manufacturer=AirplaneManufacturer.objects.create(
+        airplane_manufacturer = AirplaneManufacturer.objects.create(
             name="Manufacturer"
         )
         airplane_type = AirplaneType.objects.create(
@@ -142,7 +146,10 @@ class AdminAirplaneApiTests(TestCase):
 
         response = self.client.put(url, payload)
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_delete_airplane_not_allowed(self):
         airplane = sample_airplane()
@@ -150,7 +157,10 @@ class AdminAirplaneApiTests(TestCase):
 
         response = self.client.delete(url)
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
 
 class AirplaneImageUploadTests(TestCase):
@@ -172,7 +182,11 @@ class AirplaneImageUploadTests(TestCase):
             img = Image.new("RGB", (10, 10))
             img.save(ntf, format="JPEG")
             ntf.seek(0)
-            response = self.client.post(url, {"image": ntf}, format="multipart")
+            response = self.client.post(
+                url,
+                {"image": ntf},
+                format="multipart"
+            )
         self.airplane.refresh_from_db()
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -221,5 +235,3 @@ class AirplaneImageUploadTests(TestCase):
         res = self.client.get(detail_url(self.airplane.id))
 
         self.assertIn("image", res.data)
-
-

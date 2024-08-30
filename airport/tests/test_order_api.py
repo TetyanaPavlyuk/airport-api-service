@@ -199,7 +199,10 @@ class AuthenticatedOrderAPITests(TestCase):
         for ticket in response.data["tickets"]:
             self.assertIn(ticket, serializer.data["tickets"])
 
-        self.assertEqual(response.data["created_at"], serializer.data["created_at"])
+        self.assertEqual(
+            response.data["created_at"],
+            serializer.data["created_at"]
+        )
 
     def test_put_order_not_allowed(self):
         flight = sample_flight()
@@ -226,7 +229,10 @@ class AuthenticatedOrderAPITests(TestCase):
 
         response = self.client.put(url, payload)
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_delete_order(self):
         flight = sample_flight()

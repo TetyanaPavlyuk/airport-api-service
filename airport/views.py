@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django.db.models import F, Count
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins, status
@@ -184,7 +183,9 @@ class FlightViewSet(
     def get_queryset(self):
         """Retrieve the flights with filters"""
         source_airport = self.request.query_params.get("source_airport")
-        destination_airport = self.request.query_params.get("destination_airport")
+        destination_airport = self.request.query_params.get(
+            "destination_airport"
+        )
         source_city = self.request.query_params.get("source_city")
         destination_city = self.request.query_params.get("destination_city")
         airplane = self.request.query_params.get("airplane")
@@ -217,8 +218,9 @@ class FlightViewSet(
                 route__source__closest_big_city__icontains=source_city
             )
         if destination_city:
+            dc = destination_city
             queryset = queryset.filter(
-                route__destination__closest_big_city__icontains=destination_city
+                route__destination__closest_big_city__icontains=dc
             )
         if airplane:
             queryset = queryset.filter(airplane__name__icontains=airplane)
@@ -326,10 +328,12 @@ class OrderViewSet(
     def get_queryset(self):
         queryset = self.queryset
         if self.action in ["list", "retrieve"]:
-            queryset = (queryset.select_related()
-                        .prefetch_related("tickets__flight__route__source",
-                                          "tickets__flight__route__destination",
-                                          "tickets__flight__airplane")
+            queryset = (queryset
+                        .select_related()
+                        .prefetch_related(
+                            "tickets__flight__route__source",
+                            "tickets__flight__route__destination",
+                            "tickets__flight__airplane")
                         )
         queryset = queryset.filter(user=self.request.user)
         return queryset

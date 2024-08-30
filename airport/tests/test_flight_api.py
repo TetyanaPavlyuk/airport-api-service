@@ -498,7 +498,10 @@ class AdminFlightAPITests(TestCase):
 
         response = self.client.put(url, payload)
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )
 
     def test_delete_flight_not_allowed(self):
         flight = sample_flight()
@@ -506,4 +509,7 @@ class AdminFlightAPITests(TestCase):
 
         response = self.client.delete(url)
 
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_405_METHOD_NOT_ALLOWED
+        )

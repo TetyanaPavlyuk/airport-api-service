@@ -1,0 +1,7 @@
+.venv
+Dockerfile
+.idea
+.env
+docker-compose.yaml
+db.sqlite3
+media
